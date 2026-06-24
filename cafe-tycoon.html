@@ -1,0 +1,1297 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>바쁜 카페 타이쿤</title>
+  <style>
+    :root {
+      --ink: #39251e;
+      --paper: #fffdf5;
+      --cream: #fff2c5;
+      --pink: #ff6f91;
+      --orange: #ffad4f;
+      --yellow: #ffe36e;
+      --green: #63c985;
+      --blue: #67c7f4;
+      --purple: #b68cff;
+      --danger: #ff4f5f;
+      --brown: #8a5733;
+      --shadow: 0 12px 24px rgba(95, 55, 28, 0.2);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      overflow-x: hidden;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 12% 12%, rgba(255, 227, 110, 0.65), transparent 25%),
+        radial-gradient(circle at 88% 18%, rgba(103, 199, 244, 0.45), transparent 24%),
+        radial-gradient(circle at 28% 88%, rgba(255, 111, 145, 0.26), transparent 27%),
+        linear-gradient(135deg, #fff4b9 0%, #ffd8bd 48%, #cdf5e8 100%);
+      user-select: none;
+    }
+
+    button {
+      border: 0;
+      font: inherit;
+      color: inherit;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 14px;
+    }
+
+    .screen {
+      width: min(1120px, 100%);
+      display: none;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    .hero,
+    .game-over {
+      min-height: calc(100vh - 28px);
+      display: grid;
+      place-items: center;
+      text-align: center;
+    }
+
+    .hero-card,
+    .over-card {
+      width: min(680px, 100%);
+      padding: clamp(24px, 6vw, 52px);
+      border: 5px solid rgba(138, 87, 51, 0.18);
+      border-radius: 30px;
+      background: rgba(255, 253, 245, 0.94);
+      box-shadow: var(--shadow);
+    }
+
+    .logo {
+      margin-bottom: 14px;
+      font-size: clamp(48px, 11vw, 86px);
+      line-height: 1;
+      filter: drop-shadow(0 8px 0 rgba(138, 87, 51, 0.11));
+    }
+
+    h1,
+    h2,
+    p {
+      margin: 0;
+    }
+
+    h1 {
+      font-size: clamp(34px, 8vw, 64px);
+      letter-spacing: 0;
+    }
+
+    h2 {
+      font-size: clamp(30px, 7vw, 54px);
+    }
+
+    .subtitle {
+      max-width: 560px;
+      margin: 14px auto 28px;
+      font-size: clamp(16px, 3vw, 20px);
+      line-height: 1.55;
+    }
+
+    .primary-btn {
+      min-width: 190px;
+      padding: 15px 28px;
+      border-radius: 999px;
+      color: white;
+      background: linear-gradient(135deg, #ff6f6f, #ffad4f);
+      box-shadow: 0 9px 0 #b9622c, 0 18px 28px rgba(138, 87, 51, 0.24);
+      font-weight: 950;
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+    }
+
+    .primary-btn:active {
+      transform: translateY(6px);
+      box-shadow: 0 3px 0 #b9622c, 0 10px 18px rgba(138, 87, 51, 0.18);
+    }
+
+    .tip-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 24px;
+    }
+
+    .tip {
+      padding: 9px 12px;
+      border-radius: 999px;
+      background: #fff0a7;
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    .game {
+      min-height: calc(100vh - 28px);
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 10px;
+    }
+
+    .hud {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .stat {
+      min-height: 66px;
+      display: grid;
+      align-content: center;
+      gap: 2px;
+      padding: 10px 12px;
+      border: 3px solid rgba(138, 87, 51, 0.14);
+      border-radius: 18px;
+      background: rgba(255, 253, 245, 0.92);
+      box-shadow: 0 8px 16px rgba(95, 55, 28, 0.11);
+    }
+
+    .stat span {
+      color: rgba(57, 37, 30, 0.62);
+      font-size: 12px;
+      font-weight: 950;
+    }
+
+    .stat strong {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: clamp(17px, 3.1vw, 27px);
+      font-weight: 1000;
+    }
+
+    .held strong {
+      color: #d54a68;
+    }
+
+    .stage-wrap {
+      position: relative;
+      min-height: 0;
+      border: 5px solid rgba(138, 87, 51, 0.18);
+      border-radius: 28px;
+      background:
+        linear-gradient(90deg, rgba(255, 255, 255, 0.48) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(255, 255, 255, 0.48) 1px, transparent 1px),
+        linear-gradient(180deg, #fff2ca 0%, #ffe2b1 58%, #ffd2ae 100%);
+      background-size: 32px 32px, 32px 32px, 100% 100%;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      aspect-ratio: 16 / 9;
+    }
+
+    .stage-wrap::before {
+      content: "BIBI CAFE";
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      z-index: 0;
+      padding: 8px 18px;
+      border-radius: 999px;
+      color: white;
+      background: repeating-linear-gradient(90deg, #ff6f6f 0 28px, #ff9a76 28px 56px);
+      box-shadow: 0 5px 0 rgba(138, 87, 51, 0.18);
+      font-weight: 1000;
+      letter-spacing: 0;
+      transform: translateX(-50%);
+    }
+
+    .object,
+    .table,
+    .player,
+    .hint-bubble {
+      position: absolute;
+      transform: translate(-50%, -50%);
+    }
+
+    .station {
+      width: 19%;
+      height: 34%;
+      display: grid;
+      place-items: center;
+      border: 4px solid rgba(138, 87, 51, 0.2);
+      border-radius: 24px;
+      background: linear-gradient(180deg, #fffdf7, #ffe6a8);
+      box-shadow: 0 12px 0 rgba(138, 87, 51, 0.13), 0 18px 24px rgba(95, 55, 28, 0.16);
+      text-align: center;
+      font-weight: 1000;
+    }
+
+    .station.near {
+      outline: 5px solid rgba(255, 111, 145, 0.38);
+      animation: wiggle 0.45s infinite alternate;
+    }
+
+    .station .icon {
+      display: block;
+      font-size: clamp(30px, 5vw, 58px);
+      line-height: 1;
+    }
+
+    .drink-station {
+      left: 15%;
+      top: 34%;
+    }
+
+    .dessert-station {
+      left: 85%;
+      top: 34%;
+      background: linear-gradient(180deg, #fffdf7, #ffd7ea);
+    }
+
+    .table {
+      width: 18%;
+      height: 25%;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      align-items: center;
+      justify-items: center;
+      padding: 8px;
+      border: 4px solid rgba(138, 87, 51, 0.2);
+      border-radius: 23px;
+      background: linear-gradient(180deg, #f8c36d, #d98d45);
+      box-shadow: 0 10px 0 rgba(101, 59, 30, 0.24), 0 16px 22px rgba(95, 55, 28, 0.14);
+    }
+
+    .table.near {
+      outline: 5px solid rgba(103, 199, 244, 0.48);
+      animation: wiggle 0.45s infinite alternate;
+    }
+
+    @keyframes wiggle {
+      from {
+        rotate: -1deg;
+      }
+      to {
+        rotate: 1deg;
+      }
+    }
+
+    .table-0 {
+      left: 17%;
+      top: 78%;
+    }
+
+    .table-1 {
+      left: 39%;
+      top: 78%;
+    }
+
+    .table-2 {
+      left: 61%;
+      top: 78%;
+    }
+
+    .table-3 {
+      left: 83%;
+      top: 78%;
+    }
+
+    .seat {
+      min-height: 32px;
+      font-size: clamp(24px, 4.5vw, 42px);
+      line-height: 1;
+    }
+
+    .bubble {
+      position: relative;
+      max-width: 100%;
+      min-height: 36px;
+      display: grid;
+      place-items: center;
+      padding: 7px 8px;
+      border: 3px solid rgba(57, 37, 30, 0.11);
+      border-radius: 16px;
+      background: white;
+      text-align: center;
+      font-size: clamp(11px, 1.7vw, 14px);
+      font-weight: 950;
+      line-height: 1.15;
+    }
+
+    .bubble.empty {
+      color: rgba(57, 37, 30, 0.48);
+      background: rgba(255, 255, 255, 0.58);
+    }
+
+    .patience {
+      width: 92%;
+      height: 11px;
+      border-radius: 999px;
+      background: rgba(255, 253, 245, 0.65);
+      overflow: hidden;
+    }
+
+    .patience-bar {
+      height: 100%;
+      width: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--green), var(--yellow), var(--danger));
+      transition: width 0.08s linear;
+    }
+
+    .player {
+      z-index: 5;
+      width: 54px;
+      height: 54px;
+      display: grid;
+      place-items: center;
+      border: 4px solid rgba(57, 37, 30, 0.16);
+      border-radius: 50%;
+      background: linear-gradient(180deg, #fff, #ffdfef);
+      box-shadow: 0 8px 0 rgba(138, 87, 51, 0.16), 0 14px 18px rgba(95, 55, 28, 0.17);
+      font-size: 31px;
+      transition: filter 0.12s ease;
+    }
+
+    .player.carrying::after {
+      content: attr(data-held);
+      position: absolute;
+      top: -25px;
+      left: 50%;
+      min-width: 82px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      color: white;
+      background: #d54a68;
+      font-size: 11px;
+      font-weight: 1000;
+      text-align: center;
+      transform: translateX(-50%);
+    }
+
+    .hint-bubble {
+      z-index: 7;
+      left: 50%;
+      bottom: 18px;
+      width: min(440px, calc(100% - 24px));
+      padding: 11px 14px;
+      border: 4px solid rgba(57, 37, 30, 0.12);
+      border-radius: 999px;
+      color: white;
+      background: rgba(57, 37, 30, 0.88);
+      box-shadow: 0 10px 18px rgba(57, 37, 30, 0.16);
+      text-align: center;
+      font-weight: 1000;
+      pointer-events: none;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      color: rgba(57, 37, 30, 0.7);
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .key {
+      display: inline-flex;
+      align-items: center;
+      min-height: 30px;
+      padding: 5px 10px;
+      border: 2px solid rgba(138, 87, 51, 0.14);
+      border-radius: 999px;
+      background: rgba(255, 253, 245, 0.82);
+    }
+
+    .menu-panel {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: none;
+      place-items: center;
+      padding: 18px;
+      background: rgba(57, 37, 30, 0.36);
+      backdrop-filter: blur(5px);
+    }
+
+    .menu-panel.open {
+      display: grid;
+    }
+
+    .menu-card {
+      width: min(420px, 100%);
+      padding: 22px;
+      border: 5px solid rgba(138, 87, 51, 0.18);
+      border-radius: 26px;
+      background: var(--paper);
+      box-shadow: var(--shadow);
+    }
+
+    .menu-card h3 {
+      margin: 0 0 12px;
+      font-size: 28px;
+      text-align: center;
+    }
+
+    .menu-help {
+      margin-bottom: 14px;
+      color: rgba(57, 37, 30, 0.66);
+      text-align: center;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .menu-options {
+      display: grid;
+      gap: 10px;
+    }
+
+    .menu-option {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 16px;
+      border: 3px solid rgba(138, 87, 51, 0.12);
+      border-radius: 18px;
+      background: #fff4cf;
+      font-weight: 1000;
+    }
+
+    .menu-option.selected {
+      color: white;
+      background: linear-gradient(135deg, #ff6f91, #ffad4f);
+      box-shadow: 0 0 0 5px rgba(255, 111, 145, 0.24);
+      transform: scale(1.02);
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 22px;
+      z-index: 30;
+      max-width: min(92vw, 460px);
+      padding: 12px 16px;
+      border-radius: 999px;
+      color: white;
+      background: rgba(57, 37, 30, 0.92);
+      text-align: center;
+      font-weight: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transform: translate(-50%, 80px);
+      transition: opacity 0.18s ease, transform 0.18s ease;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+
+    .final-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin: 24px 0;
+    }
+
+    .final-stat {
+      padding: 14px 10px;
+      border-radius: 18px;
+      background: #fff0b6;
+    }
+
+    .final-stat span {
+      display: block;
+      color: rgba(57, 37, 30, 0.62);
+      font-size: 12px;
+      font-weight: 950;
+    }
+
+    .final-stat strong {
+      font-size: clamp(22px, 5vw, 34px);
+    }
+
+    .touch-pad {
+      display: none;
+      grid-template-columns: repeat(3, 48px);
+      grid-template-rows: repeat(3, 48px);
+      justify-content: center;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .touch-pad button {
+      border-radius: 16px;
+      color: white;
+      background: rgba(57, 37, 30, 0.74);
+      font-weight: 1000;
+    }
+
+    .touch-pad .up {
+      grid-column: 2;
+    }
+
+    .touch-pad .left {
+      grid-column: 1;
+      grid-row: 2;
+    }
+
+    .touch-pad .space {
+      grid-column: 2;
+      grid-row: 2;
+      background: #ff6f91;
+    }
+
+    .touch-pad .right {
+      grid-column: 3;
+      grid-row: 2;
+    }
+
+    .touch-pad .down {
+      grid-column: 2;
+      grid-row: 3;
+    }
+
+    @media (max-width: 880px) {
+      .app {
+        padding: 8px;
+      }
+
+      .hud {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .stage-wrap {
+        aspect-ratio: 10 / 9;
+      }
+
+      .station {
+        width: 23%;
+        height: 30%;
+      }
+
+      .table {
+        width: 23%;
+        height: 23%;
+      }
+
+      .touch-pad {
+        display: grid;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .hud {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .stat {
+        min-height: 58px;
+      }
+
+      .stage-wrap {
+        aspect-ratio: 9 / 11;
+      }
+
+      .stage-wrap::before {
+        top: 8px;
+        font-size: 13px;
+      }
+
+      .station {
+        width: 31%;
+        height: 22%;
+        font-size: 13px;
+      }
+
+      .table {
+        width: 24%;
+        height: 18%;
+      }
+
+      .player {
+        width: 48px;
+        height: 48px;
+        font-size: 27px;
+      }
+
+      .controls {
+        font-size: 12px;
+      }
+
+      .final-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section id="startScreen" class="screen active">
+      <div class="hero">
+        <div class="hero-card">
+          <div class="logo">☕🥞</div>
+          <h1>바쁜 카페 타이쿤</h1>
+          <p class="subtitle">
+            방향키로 카페를 뛰어다니며 음료와 디저트를 만들고, 테이블 손님에게 정확히 전달하세요.
+            2분 동안 최대 매출에 도전합니다.
+          </p>
+          <button id="startBtn" class="primary-btn">영업 시작</button>
+          <div class="tip-row">
+            <div class="tip">방향키: 이동</div>
+            <div class="tip">Space: 상호작용</div>
+            <div class="tip">Backspace: 들고 있는 메뉴 버리기</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="gameScreen" class="screen">
+      <div class="game">
+        <header class="hud">
+          <div class="stat"><span>남은 시간</span><strong id="timeText">02:00</strong></div>
+          <div class="stat"><span>점수</span><strong id="scoreText">0</strong></div>
+          <div class="stat"><span>코인</span><strong id="coinText">0</strong></div>
+          <div class="stat"><span>콤보</span><strong id="comboText">0</strong></div>
+          <div class="stat"><span>난이도</span><strong id="levelText">1</strong></div>
+          <div class="stat held"><span>들고 있는 메뉴</span><strong id="heldText">없음</strong></div>
+        </header>
+
+        <section id="stage" class="stage-wrap" aria-label="카페 게임 화면">
+          <div id="drinkStation" class="object station drink-station" data-kind="drink">
+            <div><span class="icon">☕</span>음료 제조대</div>
+          </div>
+          <div id="dessertStation" class="object station dessert-station" data-kind="dessert">
+            <div><span class="icon">🍧</span>디저트 제조대</div>
+          </div>
+
+          <div id="table0" class="table table-0" data-table="0"></div>
+          <div id="table1" class="table table-1" data-table="1"></div>
+          <div id="table2" class="table table-2" data-table="2"></div>
+          <div id="table3" class="table table-3" data-table="3"></div>
+
+          <div id="player" class="player">🧑‍🍳</div>
+          <div id="hintBubble" class="hint-bubble">방향키로 움직여 제조대나 테이블 앞에 서세요</div>
+        </section>
+
+        <footer>
+          <div class="controls">
+            <span class="key">← ↑ ↓ → 이동</span>
+            <span class="key">Space 상호작용 / 선택</span>
+            <span class="key">Backspace 들고 있는 메뉴 초기화</span>
+            <span class="key">패널 열림: ↑ ↓ 선택</span>
+          </div>
+          <div class="touch-pad" aria-label="모바일 조작">
+            <button class="up" data-touch="ArrowUp">↑</button>
+            <button class="left" data-touch="ArrowLeft">←</button>
+            <button class="space" data-touch="Space">●</button>
+            <button class="right" data-touch="ArrowRight">→</button>
+            <button class="down" data-touch="ArrowDown">↓</button>
+          </div>
+        </footer>
+      </div>
+    </section>
+
+    <section id="gameOverScreen" class="screen">
+      <div class="game-over">
+        <div class="over-card">
+          <div class="logo">🏆☕</div>
+          <h2>영업 종료</h2>
+          <p class="subtitle">오늘의 카페 매출 기록입니다.</p>
+          <div class="final-grid">
+            <div class="final-stat"><span>최종 점수</span><strong id="finalScore">0</strong></div>
+            <div class="final-stat"><span>코인</span><strong id="finalCoins">0</strong></div>
+            <div class="final-stat"><span>최대 콤보</span><strong id="finalCombo">0</strong></div>
+            <div class="final-stat"><span>최고 점수</span><strong id="bestScore">0</strong></div>
+          </div>
+          <button id="restartBtn" class="primary-btn">다시 영업</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="menuPanel" class="menu-panel" role="dialog" aria-modal="true">
+    <div class="menu-card">
+      <h3 id="menuTitle">메뉴 선택</h3>
+      <div class="menu-help">↑ ↓ 로 고르고 Space로 만들기</div>
+      <div id="menuOptions" class="menu-options"></div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    const GAME_SECONDS = 120;
+    const WORLD = { width: 900, height: 560 };
+    const PLAYER_SIZE = 54;
+    const PLAYER_SPEED = 250;
+    const INTERACT_RANGE = 92;
+    const EAT_SECONDS = 5;
+
+    const menuItems = [
+      { id: "americano", name: "아메리카노", icon: "☕", type: "drink", coin: 8, score: 28 },
+      { id: "latte", name: "카페라떼", icon: "🥛", type: "drink", coin: 9, score: 30 },
+      { id: "strawberryLatte", name: "딸기라떼", icon: "🍓", type: "drink", coin: 10, score: 32 },
+      { id: "strawberryCroffle", name: "딸기 크로플", icon: "🥞", type: "dessert", coin: 13, score: 38 },
+      { id: "redBeanBingsu", name: "팥빙수", icon: "🍧", type: "dessert", coin: 14, score: 40 }
+    ];
+
+    const menuById = Object.fromEntries(menuItems.map((item) => [item.id, item]));
+    const faces = ["😀", "😎", "🥰", "🤠", "😋", "🧐", "🤩", "😌", "😮", "🙂"];
+    const eatingLines = ["냠냠…", "맛있다!", "또 올게요!", "완전 달콤!"];
+
+    const points = {
+      drink: { x: 135, y: 190 },
+      dessert: { x: 765, y: 190 },
+      tables: [
+        { x: 153, y: 437 },
+        { x: 351, y: 437 },
+        { x: 549, y: 437 },
+        { x: 747, y: 437 }
+      ]
+    };
+
+    const els = {
+      startScreen: document.querySelector("#startScreen"),
+      gameScreen: document.querySelector("#gameScreen"),
+      gameOverScreen: document.querySelector("#gameOverScreen"),
+      startBtn: document.querySelector("#startBtn"),
+      restartBtn: document.querySelector("#restartBtn"),
+      stage: document.querySelector("#stage"),
+      player: document.querySelector("#player"),
+      drinkStation: document.querySelector("#drinkStation"),
+      dessertStation: document.querySelector("#dessertStation"),
+      tables: [...document.querySelectorAll(".table")],
+      hintBubble: document.querySelector("#hintBubble"),
+      menuPanel: document.querySelector("#menuPanel"),
+      menuTitle: document.querySelector("#menuTitle"),
+      menuOptions: document.querySelector("#menuOptions"),
+      timeText: document.querySelector("#timeText"),
+      scoreText: document.querySelector("#scoreText"),
+      coinText: document.querySelector("#coinText"),
+      comboText: document.querySelector("#comboText"),
+      levelText: document.querySelector("#levelText"),
+      heldText: document.querySelector("#heldText"),
+      finalScore: document.querySelector("#finalScore"),
+      finalCoins: document.querySelector("#finalCoins"),
+      finalCombo: document.querySelector("#finalCombo"),
+      bestScore: document.querySelector("#bestScore"),
+      toast: document.querySelector("#toast")
+    };
+
+    let state = createInitialState();
+    let keys = {};
+    let animationId = null;
+    let lastFrame = 0;
+    let toastTimer = null;
+
+    function createInitialState() {
+      return {
+        running: false,
+        remaining: GAME_SECONDS,
+        elapsed: 0,
+        score: 0,
+        coins: 0,
+        combo: 0,
+        maxCombo: 0,
+        level: 1,
+        heldItemId: null,
+        player: { x: WORLD.width / 2, y: WORLD.height / 2 },
+        menu: { open: false, type: null, selected: 0 },
+        tables: Array.from({ length: 4 }, (_, index) => ({
+          customer: null,
+          nextSpawnIn: 0.8 + index * 0.9
+        }))
+      };
+    }
+
+    function showScreen(screen) {
+      [els.startScreen, els.gameScreen, els.gameOverScreen].forEach((node) => {
+        node.classList.toggle("active", node === screen);
+      });
+    }
+
+    function formatTime(seconds) {
+      const safe = Math.max(0, Math.ceil(seconds));
+      const minutes = Math.floor(safe / 60).toString().padStart(2, "0");
+      const secs = (safe % 60).toString().padStart(2, "0");
+      return `${minutes}:${secs}`;
+    }
+
+    function distance(a, b) {
+      return Math.hypot(a.x - b.x, a.y - b.y);
+    }
+
+    function clamp(value, min, max) {
+      return Math.max(min, Math.min(max, value));
+    }
+
+    function getDifficulty() {
+      const level = Math.min(5, Math.floor(state.elapsed / 24) + 1);
+      return {
+        level,
+        patience: Math.max(9, 19 - (level - 1) * 2.2),
+        patienceDrain: 1 + (level - 1) * 0.22,
+        spawnMin: Math.max(1.1, 3.3 - (level - 1) * 0.38),
+        spawnMax: Math.max(2.2, 6.2 - (level - 1) * 0.62)
+      };
+    }
+
+    function randomSpawnDelay() {
+      const difficulty = getDifficulty();
+      return difficulty.spawnMin + Math.random() * (difficulty.spawnMax - difficulty.spawnMin);
+    }
+
+    function randomOrder() {
+      const difficulty = getDifficulty();
+      const pool = difficulty.level < 2
+        ? menuItems.slice(0, 3)
+        : difficulty.level < 3
+          ? menuItems.slice(0, 4)
+          : menuItems;
+      return pool[Math.floor(Math.random() * pool.length)];
+    }
+
+    function spawnCustomer(table) {
+      const difficulty = getDifficulty();
+      const order = randomOrder();
+      table.customer = {
+        face: faces[Math.floor(Math.random() * faces.length)],
+        orderId: order.id,
+        patience: difficulty.patience,
+        patienceLeft: difficulty.patience,
+        status: "waiting",
+        eatLeft: EAT_SECONDS,
+        eatingLine: eatingLines[Math.floor(Math.random() * eatingLines.length)]
+      };
+      table.nextSpawnIn = 0;
+    }
+
+    function startGame() {
+      stopLoop();
+      state = createInitialState();
+      keys = {};
+      showScreen(els.gameScreen);
+      state.running = true;
+      lastFrame = performance.now();
+      renderAll();
+      animationId = requestAnimationFrame(loop);
+    }
+
+    function stopLoop() {
+      if (animationId) cancelAnimationFrame(animationId);
+      animationId = null;
+    }
+
+    function loop(now) {
+      const delta = Math.min(0.05, (now - lastFrame) / 1000);
+      lastFrame = now;
+      update(delta);
+      renderAll();
+
+      if (state.running) {
+        animationId = requestAnimationFrame(loop);
+      }
+    }
+
+    function update(delta) {
+      if (!state.running) return;
+
+      state.remaining -= delta;
+      state.elapsed += delta;
+      state.level = getDifficulty().level;
+
+      if (!state.menu.open) {
+        updatePlayer(delta);
+      }
+
+      updateTables(delta);
+
+      if (state.remaining <= 0) {
+        endGame();
+      }
+    }
+
+    function updatePlayer(delta) {
+      let dx = 0;
+      let dy = 0;
+
+      if (keys.ArrowLeft) dx -= 1;
+      if (keys.ArrowRight) dx += 1;
+      if (keys.ArrowUp) dy -= 1;
+      if (keys.ArrowDown) dy += 1;
+
+      if (dx !== 0 || dy !== 0) {
+        const length = Math.hypot(dx, dy);
+        state.player.x += (dx / length) * PLAYER_SPEED * delta;
+        state.player.y += (dy / length) * PLAYER_SPEED * delta;
+      }
+
+      const margin = PLAYER_SIZE / 2;
+      state.player.x = clamp(state.player.x, margin, WORLD.width - margin);
+      state.player.y = clamp(state.player.y, margin + 10, WORLD.height - margin);
+    }
+
+    function updateTables(delta) {
+      const difficulty = getDifficulty();
+      state.tables.forEach((table) => {
+        const customer = table.customer;
+
+        if (!customer) {
+          table.nextSpawnIn -= delta;
+          if (table.nextSpawnIn <= 0) {
+            spawnCustomer(table);
+          }
+          return;
+        }
+
+        if (customer.status === "eating") {
+          customer.eatLeft -= delta;
+          if (customer.eatLeft <= 0) {
+            table.customer = null;
+            table.nextSpawnIn = randomSpawnDelay();
+          }
+          return;
+        }
+
+        customer.patienceLeft -= delta * difficulty.patienceDrain;
+        if (customer.patienceLeft <= 0) {
+          table.customer = null;
+          table.nextSpawnIn = randomSpawnDelay();
+          state.combo = 0;
+          state.score = Math.max(0, state.score - 8);
+          showToast("손님이 화나서 떠났습니다. 콤보 초기화!");
+        }
+      });
+    }
+
+    function getNearbyObject() {
+      const player = state.player;
+      const candidates = [
+        { type: "drink", label: "SPACE: 음료 만들기", point: points.drink },
+        { type: "dessert", label: "SPACE: 디저트 만들기", point: points.dessert },
+        ...points.tables.map((point, index) => ({
+          type: "table",
+          index,
+          label: "SPACE: 전달하기",
+          point
+        }))
+      ];
+
+      return candidates
+        .map((candidate) => ({ ...candidate, dist: distance(player, candidate.point) }))
+        .filter((candidate) => candidate.dist <= INTERACT_RANGE)
+        .sort((a, b) => a.dist - b.dist)[0] || null;
+    }
+
+    function interact() {
+      if (!state.running) return;
+
+      if (state.menu.open) {
+        makeSelectedMenu();
+        return;
+      }
+
+      const nearby = getNearbyObject();
+      if (!nearby) {
+        showToast("조금 더 가까이 가야 합니다.");
+        return;
+      }
+
+      if (nearby.type === "drink" || nearby.type === "dessert") {
+        openMenu(nearby.type);
+        return;
+      }
+
+      deliverToTable(nearby.index);
+    }
+
+    function openMenu(type) {
+      state.menu = { open: true, type, selected: 0 };
+      renderMenu();
+    }
+
+    function closeMenu() {
+      state.menu.open = false;
+      els.menuPanel.classList.remove("open");
+    }
+
+    function getCurrentMenuOptions() {
+      return menuItems.filter((item) => item.type === state.menu.type);
+    }
+
+    function renderMenu() {
+      if (!state.menu.open) return;
+
+      const options = getCurrentMenuOptions();
+      els.menuTitle.textContent = state.menu.type === "drink" ? "음료 만들기" : "디저트 만들기";
+      els.menuOptions.innerHTML = options.map((item, index) => `
+        <button class="menu-option ${index === state.menu.selected ? "selected" : ""}" type="button" data-menu-index="${index}">
+          <span>${item.icon} ${item.name}</span>
+          <span>+${item.coin}코인</span>
+        </button>
+      `).join("");
+      els.menuPanel.classList.add("open");
+    }
+
+    function moveMenuSelection(direction) {
+      if (!state.menu.open) return;
+      const options = getCurrentMenuOptions();
+      state.menu.selected = (state.menu.selected + direction + options.length) % options.length;
+      renderMenu();
+    }
+
+    function makeSelectedMenu() {
+      const item = getCurrentMenuOptions()[state.menu.selected];
+      state.heldItemId = item.id;
+      closeMenu();
+      showToast(`${item.icon} ${item.name} 완성! 테이블로 가져가세요.`);
+    }
+
+    function clearHeldItem() {
+      if (state.menu.open) return;
+      if (!state.heldItemId) {
+        showToast("버릴 메뉴가 없습니다.");
+        return;
+      }
+      const item = menuById[state.heldItemId];
+      state.heldItemId = null;
+      showToast(`${item.name}을(를) 비웠습니다.`);
+    }
+
+    function deliverToTable(index) {
+      const table = state.tables[index];
+      const customer = table.customer;
+
+      if (!customer) {
+        showToast("아직 손님이 없는 테이블입니다.");
+        return;
+      }
+
+      if (customer.status === "eating") {
+        showToast("이미 맛있게 먹는 중입니다.");
+        return;
+      }
+
+      if (!state.heldItemId) {
+        showToast("먼저 메뉴를 만들어 들고 오세요.");
+        return;
+      }
+
+      const held = menuById[state.heldItemId];
+      const order = menuById[customer.orderId];
+
+      if (held.id === order.id) {
+        state.combo += 1;
+        state.maxCombo = Math.max(state.maxCombo, state.combo);
+        const comboBonus = Math.min(50, (state.combo - 1) * 5);
+        const quickBonus = Math.ceil((customer.patienceLeft / customer.patience) * 12);
+        const scoreGain = order.score + comboBonus + quickBonus;
+        state.score += scoreGain;
+        state.coins += order.coin;
+        state.heldItemId = null;
+        customer.status = "eating";
+        customer.eatLeft = EAT_SECONDS;
+        customer.eatingLine = eatingLines[Math.floor(Math.random() * eatingLines.length)];
+        showToast(`전달 성공! +${scoreGain}점 +${order.coin}코인 콤보 ${state.combo}`);
+      } else {
+        state.score = Math.max(0, state.score - 12);
+        state.combo = 0;
+        customer.patienceLeft = Math.max(1, customer.patienceLeft - customer.patience * 0.32);
+        showToast(`잘못된 메뉴입니다. 주문은 ${order.name}! 점수 -12`);
+      }
+    }
+
+    function endGame() {
+      state.running = false;
+      stopLoop();
+      closeMenu();
+      const best = Math.max(Number(localStorage.getItem("busyCafeRunnerBestScore") || 0), state.score);
+      localStorage.setItem("busyCafeRunnerBestScore", String(best));
+      els.finalScore.textContent = state.score.toLocaleString("ko-KR");
+      els.finalCoins.textContent = state.coins.toLocaleString("ko-KR");
+      els.finalCombo.textContent = state.maxCombo.toLocaleString("ko-KR");
+      els.bestScore.textContent = best.toLocaleString("ko-KR");
+      showScreen(els.gameOverScreen);
+    }
+
+    function renderAll() {
+      renderHud();
+      renderPlayer();
+      renderTables();
+      renderHints();
+    }
+
+    function renderHud() {
+      const held = state.heldItemId ? menuById[state.heldItemId] : null;
+      els.timeText.textContent = formatTime(state.remaining);
+      els.scoreText.textContent = state.score.toLocaleString("ko-KR");
+      els.coinText.textContent = state.coins.toLocaleString("ko-KR");
+      els.comboText.textContent = `${state.combo}`;
+      els.levelText.textContent = `${state.level}`;
+      els.heldText.textContent = held ? `${held.icon} ${held.name}` : "없음";
+    }
+
+    function renderPlayer() {
+      const x = (state.player.x / WORLD.width) * 100;
+      const y = (state.player.y / WORLD.height) * 100;
+      const held = state.heldItemId ? menuById[state.heldItemId] : null;
+      els.player.style.left = `${x}%`;
+      els.player.style.top = `${y}%`;
+      els.player.classList.toggle("carrying", Boolean(held));
+      els.player.dataset.held = held ? `${held.icon} ${held.name}` : "";
+    }
+
+    function renderTables() {
+      state.tables.forEach((table, index) => {
+        const el = els.tables[index];
+        const customer = table.customer;
+
+        if (!customer) {
+          el.innerHTML = `
+            <div class="seat">🪑</div>
+            <div class="bubble empty">빈 테이블</div>
+            <div class="patience"><div class="patience-bar" style="width:0%"></div></div>
+          `;
+          return;
+        }
+
+        const order = menuById[customer.orderId];
+        const isEating = customer.status === "eating";
+        const bubble = isEating ? customer.eatingLine : `${order.icon} ${order.name}`;
+        const barWidth = isEating
+          ? (customer.eatLeft / EAT_SECONDS) * 100
+          : (customer.patienceLeft / customer.patience) * 100;
+
+        el.innerHTML = `
+          <div class="seat">${isEating ? "😋" : customer.face}</div>
+          <div class="bubble">${bubble}</div>
+          <div class="patience"><div class="patience-bar" style="width:${Math.max(0, barWidth)}%"></div></div>
+        `;
+      });
+    }
+
+    function renderHints() {
+      const nearby = getNearbyObject();
+      const nearType = nearby?.type || null;
+
+      els.drinkStation.classList.toggle("near", nearType === "drink");
+      els.dessertStation.classList.toggle("near", nearType === "dessert");
+      els.tables.forEach((table, index) => {
+        table.classList.toggle("near", nearType === "table" && nearby.index === index);
+      });
+
+      if (state.menu.open) {
+        els.hintBubble.textContent = "↑ ↓ 로 고르고 Space로 만들기";
+      } else if (nearby) {
+        els.hintBubble.textContent = nearby.label;
+      } else {
+        els.hintBubble.textContent = "방향키로 움직여 제조대나 테이블 앞에 서세요";
+      }
+    }
+
+    function showToast(message) {
+      els.toast.textContent = message;
+      els.toast.classList.add("show");
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        els.toast.classList.remove("show");
+      }, 1600);
+    }
+
+    function handleKeyDown(event) {
+      const code = event.code;
+      if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space", "Backspace"].includes(code)) {
+        event.preventDefault();
+      }
+
+      if (state.menu.open) {
+        if (code === "ArrowUp") moveMenuSelection(-1);
+        if (code === "ArrowDown") moveMenuSelection(1);
+        if (code === "Space") interact();
+        if (code === "Escape") closeMenu();
+        return;
+      }
+
+      if (code.startsWith("Arrow")) {
+        keys[code] = true;
+      } else if (code === "Space") {
+        interact();
+      } else if (code === "Backspace") {
+        clearHeldItem();
+      }
+    }
+
+    function handleKeyUp(event) {
+      if (event.code.startsWith("Arrow")) {
+        keys[event.code] = false;
+      }
+    }
+
+    function handleTouchButton(code, isDown) {
+      if (code === "Space" && isDown) {
+        interact();
+        return;
+      }
+
+      if (state.menu.open && isDown) {
+        if (code === "ArrowUp") moveMenuSelection(-1);
+        if (code === "ArrowDown") moveMenuSelection(1);
+        return;
+      }
+
+      if (code.startsWith("Arrow")) {
+        keys[code] = isDown;
+      }
+    }
+
+    els.startBtn.addEventListener("click", startGame);
+    els.restartBtn.addEventListener("click", startGame);
+
+    els.menuOptions.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-menu-index]");
+      if (!button) return;
+      state.menu.selected = Number(button.dataset.menuIndex);
+      makeSelectedMenu();
+    });
+
+    document.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("keyup", handleKeyUp);
+
+    document.querySelectorAll("[data-touch]").forEach((button) => {
+      const code = button.dataset.touch;
+      button.addEventListener("pointerdown", (event) => {
+        event.preventDefault();
+        button.setPointerCapture(event.pointerId);
+        handleTouchButton(code, true);
+      });
+      button.addEventListener("pointerup", (event) => {
+        event.preventDefault();
+        handleTouchButton(code, false);
+      });
+      button.addEventListener("pointercancel", () => handleTouchButton(code, false));
+      button.addEventListener("pointerleave", () => handleTouchButton(code, false));
+    });
+
+    renderAll();
+  </script>
+</body>
+</html>
