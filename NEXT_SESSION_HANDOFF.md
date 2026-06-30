@@ -1,125 +1,155 @@
-# AI 분신 소셜 추리 게임 - 다음 세션 인수인계
+# AI 분신 소셜 게임 - 다음 세션 인수인계
 
-마지막 정리일: 2026-06-29 (세션 4차 업데이트 - 중복 발화 방지)
+마지막 정리일: 2026-06-30
 
-## 작업 대상
+## 새 채팅에서 가장 먼저 할 일
 
-- 프로젝트 경로: `C:\Users\정선우\Desktop\my-ai`
-- 개발 주소: `http://localhost:3001/`
-- 이 저장소의 AI 분신 추리 게임만 수정한다.
-- 루트의 `cafe-tycoon.html`은 다른 게임이므로 참고하거나 수정하지 않는다.
-- 기존 프로젝트를 새로 만들지 말고 현재 Next.js 코드베이스를 이어서 리팩터링한다.
+1. 이 파일을 처음부터 끝까지 읽는다.
+2. `git status --short`로 커밋되지 않은 랜딩 변경을 확인한다.
+3. 현재 요청이 랜딩 작업의 연장인지 사용자에게 받은 새 요청인지 확인한다.
+4. 게임·AI·API 로직은 사용자가 명시적으로 요청하지 않는 한 수정하지 않는다.
 
-## 기술 구성
+## 프로젝트
 
-- Next.js 16 App Router
-- React 18
-- TypeScript
-- Tailwind CSS
-- 브라우저 상태 및 `localStorage`
-- OpenRouter 서버 API 호출
-- 사용 모델: `google/gemini-3.1-flash-lite`
+- 경로: `C:\Users\정선우\Desktop\my-ai`
+- Next.js 16 App Router / React 18 / TypeScript / Tailwind CSS
+- GitHub: `https://github.com/zz221221221-ship-it/my-ai`
+- 브랜치: `main`
+- 현재 HEAD: `3c48314 Build AI persona social deduction multiplayer MVP`
+- Vercel Production: `https://my-ai-phi-vert.vercel.app`
+- 루트의 `cafe-tycoon.html`은 별도 게임이므로 수정하지 않는다.
 
-PowerShell에서는 실행 정책 문제를 피하기 위해 `npm` 대신 `npm.cmd`를 사용한다.
+PowerShell에서는 `npm` 대신 `npm.cmd`를 사용한다.
 
 ```powershell
-npm.cmd run dev -- --port 3001
+npm.cmd run dev
 npm.cmd run typecheck
 npm.cmd run lint
 npm.cmd run build
 ```
 
-## 환경변수
+현재 사용자가 실행 중인 개발 서버는 `http://localhost:3000`에서 확인됐다. `.env.local`의 OpenRouter referer 설정은 과거 개발 주소인 3001일 수 있으나, 랜딩 작업에서는 변경하지 않았다.
 
-`.env.local`에 다음 값이 설정되어 있음:
+## 보안
+
+- `.env.local`은 Git ignore 상태다.
+- 실제 API 키를 코드, 문서, 응답에 출력하지 않는다.
+- 필요한 환경변수 이름:
 
 ```text
 OPENROUTER_API_KEY=<secret>
-OPENROUTER_MODEL=google/gemini-3.1-flash-lite
-OPENROUTER_SITE_URL=http://localhost:3001
-OPENROUTER_APP_NAME=AI Persona Social Deduction
+OPENROUTER_MODEL=<model>
+OPENROUTER_SITE_URL=<site-url>
+OPENROUTER_APP_NAME=<app-name>
 ```
 
-## 이번 세션 작업 내용 (2026-06-29 중복 발화 방지)
+- Vercel Production 환경변수는 이미 등록되어 있다.
+- API 키는 과거 대화에 노출된 적이 있으므로 운영 전 폐기·재발급 권장.
 
-### 중복 발화 방지 시스템 구현
+## 완료되어 GitHub/Vercel에 반영된 기능
 
-#### 1. 발화 기록 저장 구조 (`lib/types.ts`)
-```typescript
-// AI 발화 기록 (중복 방지용)
-export interface SpokenLine {
-  playerId: string;
-  playerName: string;
-  turn: number;
-  original: string;        // 원문 발화
-  normalized: string;      // 정규화된 발화
-  speechAct?: string;      // 발화 전략
-  intent?: string;         // 발화 의도
-}
+- AI 분신 Persona 생성과 카카오톡 전처리
+- Persona AI / GM / 결과 리포트
+- 추리·생존·정치·연애·드라마 모드
+- 중복 발화 방지용 `SpokenLine`, `spokenLineHistory`, `usedSpeechActs`
+- `user | ai | system` 메시지 타입
+- GM 카드 대신 채팅 내부 system 메시지
+- 2초 Polling 기반 멀티플레이 MVP
+- 방 생성·참가·준비·방장 설정·턴 제출·AI/GM 1회 실행
+- 개인 역할·목표·비밀·비공개 단서 필터링
+- OpenRouter 호출은 서버 전용 `app/api/ai/route.ts` → `lib/openrouter.ts` 경계로 유지
 
-export interface GameSession {
-  // ... 기존 필드
-  spokenLineHistory: SpokenLine[];  // 세션 전체 발화 기록
-  usedSpeechActs: Record<string, string[]>;  // AI별 사용된 발화 전략
-}
+## 현재 진행 중인 작업: 랜딩페이지
+
+사용자 요청은 기존 게임을 건드리지 않고 랜딩페이지만 제작하는 것이다.
+
+### 디자인 레퍼런스
+
+- `C:\Users\정선우\Desktop\랜딩페이지 이미지1.png`
+- `C:\Users\정선우\Desktop\랜딩페이지 이미지2.png`
+
+이미지를 직접 사용하거나 복제하지 않고 다음 디자인 언어만 참고했다.
+
+- Premium / Minimal / Modern / Monochrome
+- 화이트 배경, 연한 Dot Grid, 넓은 여백
+- 블랙 타이포그래피, CSS/SVG 픽셀 아이콘
+- Desktop First, 최대 폭 약 1440px
+
+### 랜딩 구현 상태
+
+- `/`는 새 랜딩페이지다.
+- 기존 홈의 싱글플레이 설정 UI는 `/setup`으로 그대로 옮겨 기능을 보존했다.
+- `/lobby` 멀티플레이 진입도 유지한다.
+- Hero 최초 상태에는 중앙 사용자 아이콘만 보인다.
+- 로드 1.5초 후 AI 분신 5명이 430ms 간격으로 하나씩 등장한다.
+- 각 AI 애니메이션은 정확히 `opacity fade + scale(0.8 → 1)`, `400ms`, `ease-in-out`이다.
+- Hero 아래에 게임 방법, 게임 특징, 모드 스트립, FAQ, 최종 CTA가 이어진다.
+- 상단 메뉴는 `scrollIntoView({ behavior: "smooth" })`로 섹션 이동한다.
+- 별도 아이콘 라이브러리나 이미지 에셋은 사용하지 않았다.
+
+### 랜딩 관련 변경 파일
+
+수정:
+
+- `app/page.tsx` — 랜딩 진입점으로 교체
+- `app/layout.tsx` — 랜딩용 title/description
+
+신규:
+
+- `app/setup/page.tsx` — 이전 `app/page.tsx` 설정 화면 보존
+- `components/landing/LandingPage.tsx` — 랜딩 구조와 Hero 타이머
+- `components/landing/landing.module.css` — 랜딩 전용 스타일과 반응형
+
+### 절대 수정하지 않은 영역
+
+- `app/api/**`
+- `app/game/**`
+- `app/result/**`
+- `app/room/**`, `app/rooms/**`
+- `lib/**`
+- 게임 플레이 컴포넌트
+- OpenRouter 및 환경변수
+
+## 현재 Git 상태
+
+랜딩 변경은 아직 커밋·push·배포하지 않았다.
+
+예상 상태:
+
+```text
+ M app/layout.tsx
+ M app/page.tsx
+?? app/setup/
+?? components/landing/
 ```
 
-#### 2. 발화 정규화 함수 (`lib/personaSpeech.ts`)
-- `normalizeSpeech()`: 발화를 정규화하여 유사도 검사
-  - 공백, 특수문자 제거
-  - 반복 감정표현 축약 (ㅋㅋㅋㅋ → ㅋㅋ)
-  - 조사/어미 차이 무시
-  - 짧은 감탄사 제거
-  - "왜 내가", "몰라" 등 패턴 정규화
+기존 배포 `https://my-ai-phi-vert.vercel.app`에는 아직 랜딩 변경이 반영되지 않았다.
 
-#### 3. 유사도 검사 로직 (`lib/personaSpeech.ts`)
-- `isSimilarSpeech()`: 후보 발화가 기존 발화와 유사한지 검사
-  - 완전 일치 검사
-  - 포함 관계 검사 (70% 이상 일치)
-  - 핵심 키워드 일치 (의미 기반)
-  - 짧은 문장일수록 더 엄격하게 검사
+## 이번 랜딩 검증 결과
 
-#### 4. 중복 시 재생성 (`lib/ai.ts`)
-- 최대 2회 재생성 시도
-- 중복 감지 시 fallback으로 전환
-- 최대 시도 후에도 중복이면 강제 생성 (새로운 전략 선택)
+- `npm.cmd run typecheck` 통과
+- `npm.cmd run lint` 통과
+- 기존 실행 중인 dev server에서 다음 경로 HTTP 200 확인:
+  - `http://localhost:3000/`
+  - `http://localhost:3000/setup`
+  - `http://localhost:3000/lobby`
+- 서버 렌더 HTML에서 Hero, 게임 방법, 특징, FAQ, `/setup`, `/lobby` 링크 확인
+- `git diff` 기준 게임·API·AI 보호 영역 변경 없음
+- 인앱 브라우저가 제공되지 않아 실제 스크린샷 기반 시각 QA는 수행하지 못함
+- 실행 중인 사용자 dev server를 방해하지 않기 위해 이번 랜딩 수정 후 production build는 별도로 실행하지 않음
 
-#### 5. 발화 전략 중복 금지 (`lib/ai.ts`)
-- 각 AI별 사용된 발화 전략 기록
-- 아직 사용하지 않은 전략 우선 선택
-- 모든 전략을 사용했으면 순환
+## 다음 세션 권장 순서
 
-#### 6. 게임 페이지 통합 (`app/game/page.tsx`)
-- `generateAiTurnMessages()` 호출 시 발화 기록 전달
-- 결과에서 `newSpokenLines`, `newUsedSpeechActs` 수신
-- `nextSession` 생성 시 발화 기록 업데이트
+1. `git status --short` 확인
+2. 가능하면 브라우저에서 1440px 데스크톱 Hero 최초 상태와 약 4초 후 최종 상태 확인
+3. 390px 모바일 레이아웃 확인
+4. 메뉴 smooth scroll과 `/setup`, `/lobby` CTA 확인
+5. 필요하면 랜딩 CSS만 미세 조정
+6. 사용자 승인 또는 요청이 있으면 `typecheck`, `lint`, `build` 후 commit/push/Vercel 배포
 
-### 주요 변경 사항
+## 추가 개선 후보
 
-| 파일 | 변경 내용 |
-|------|----------|
-| `lib/types.ts` | `SpokenLine` 인터페이스, `GameSession`에 `spokenLineHistory`, `usedSpeechActs` 추가 |
-| `lib/gameEngine.ts` | `createGameSession()`, `loadSession()`에서 새 필드 초기화 |
-| `lib/personaSpeech.ts` | `normalizeSpeech()`, `isSimilarSpeech()` 함수 추가 |
-| `lib/ai.ts` | `generateAiTurnMessagesParallel()`에서 중복 방지 로직 통합 |
-| `app/game/page.tsx` | 발화 기록 전달 및 업데이트 |
-
-## 검증 결과
-
-- ✅ `npm.cmd run typecheck` 통과
-- ✅ `npm.cmd run lint` 통과 (warning만 존재)
-- ✅ `npm.cmd run build` 성공
-
-## 다음 세션 권장 작업
-
-1. 실제 브라우저에서 게임 플레이 테스트
-2. 5턴 이상 진행하며 중복 발화 방지 확인
-3. 콘솔 로그에서 `[중복감지]`, `[강제생성]` 메시지 확인
-4. 필요시 유사도 검사 임계값 조정
-
-## 알려진 제한사항
-
-- 유사도 검사는 휴리스틱 기반 (100% 정확하지 않음)
-- 짧은 문장(10자 이하)은 더 엄격하게 검사
-- API 응답이 중복이면 fallback으로 전환
-- 발화 기록이 많아지면 성능 영향 가능 (최대 100개 유지 권장)
+- 실제 모바일 기기 시각 QA
+- 개인정보 처리 안내/이용약관 링크
+- CTA 전환 이벤트 측정
+- 사용자별 픽셀 아바타 커스터마이징
